@@ -22,3 +22,19 @@ resource "aws_iam_policy" "this" {
     ]
   })
 }
+
+resource "aws_iam_user" "this" {
+  count = var.create_user ? 1 : 0
+  name  = var.user_name
+}
+
+resource "aws_iam_user_policy_attachment" "this" {
+  count      = var.create_user ? 1 : 0
+  user       = aws_iam_user.this[0].name
+  policy_arn = aws_iam_policy.this.arn
+}
+
+resource "aws_iam_access_key" "this" {
+  count = var.create_user ? 1 : 0
+  user  = aws_iam_user.this[0].name
+}

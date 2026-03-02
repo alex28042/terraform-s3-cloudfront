@@ -63,6 +63,28 @@ print_results() {
   echo -e "  ${BOLD}🆔 Distribution ID${NC}  ${distribution_id}"
   echo -e "  ${BOLD}🛂 IAM Policy ARN${NC}   ${policy_arn}"
 
+  local access_key_id
+  access_key_id=$(terraform output -raw backend_access_key_id 2>/dev/null || echo "")
+
+  if [[ -n "$access_key_id" && "$access_key_id" != "null" ]]; then
+    local secret_key
+    secret_key=$(terraform output -raw backend_secret_access_key 2>/dev/null)
+
+    echo ""
+    print_divider
+    echo ""
+    echo -e "  ${BOLD}🔑 Backend credentials (for Railway / Vercel / Render)${NC}"
+    echo ""
+    echo -e "  ${BOLD}AWS_ACCESS_KEY_ID${NC}      ${GREEN}${access_key_id}${NC}"
+    echo -e "  ${BOLD}AWS_SECRET_ACCESS_KEY${NC}   ${GREEN}${secret_key}${NC}"
+    echo -e "  ${BOLD}AWS_REGION${NC}              ${GREEN}$(terraform output -raw s3_bucket_name 2>/dev/null | sed 's/.*//; ')${NC}"
+    echo -e "  ${BOLD}S3_BUCKET_NAME${NC}          ${GREEN}${bucket_name}${NC}"
+    echo -e "  ${BOLD}CDN_URL${NC}                 ${GREEN}${cdn_url}${NC}"
+    echo ""
+    echo -e "  ${YELLOW}⚠️  Save these now! The secret key won't be shown again.${NC}"
+    echo -e "  ${DIM}Add them as environment variables in your Railway/Vercel dashboard.${NC}"
+  fi
+
   echo ""
   print_divider
   echo ""
@@ -74,10 +96,7 @@ print_results() {
   echo -e "  ${BOLD}2.${NC} ⬆️  ${BOLD}Backend${NC} — upload files:"
   echo -e "     ${CYAN}aws s3 cp image.webp s3://${bucket_name}/boats/image.webp${NC}"
   echo ""
-  echo -e "  ${BOLD}3.${NC} 🛂  ${BOLD}IAM${NC} — attach policy to backend role:"
-  echo -e "     ${CYAN}aws iam attach-role-policy --role-name <role> --policy-arn ${policy_arn}${NC}"
-  echo ""
-  echo -e "  ${BOLD}4.${NC} 🔄  ${BOLD}Invalidate cache${NC} — when you update an image:"
+  echo -e "  ${BOLD}3.${NC} 🔄  ${BOLD}Invalidate cache${NC} — when you update an image:"
   echo -e "     ${CYAN}aws cloudfront create-invalidation --distribution-id ${distribution_id} --paths \"/boats/*\"${NC}"
   echo ""
   echo -e "  ${DIM}Happy shipping! 🚢${NC}"

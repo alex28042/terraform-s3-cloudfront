@@ -103,6 +103,20 @@ select_versioning() {
   fi
 }
 
+select_iam_user() {
+  echo ""
+  echo -e "  ${BOLD}🔑  IAM User for backend${NC}"
+  echo -e "  ${DIM}Creates an IAM user with Access Keys so your backend can read/write S3.${NC}"
+  echo -e "  ${DIM}Needed for external platforms: Railway, Vercel, Render, Fly.io, etc.${NC}"
+  if confirm "Create IAM user with Access Keys?"; then
+    CREATE_IAM_USER="true"
+    success "IAM user will be created 🔑"
+  else
+    CREATE_IAM_USER="false"
+    success "No IAM user ${DIM}(you'll attach the policy manually)${NC}"
+  fi
+}
+
 generate_tfvars() {
   local output_file="$1"
 
@@ -114,6 +128,7 @@ cache_ttl    = ${CACHE_TTL}
 price_class  = "${PRICE_CLASS}"
 
 enable_versioning = ${ENABLE_VERSIONING}
+create_iam_user   = ${CREATE_IAM_USER}
 
 cors_allowed_origins = ["*"]
 
@@ -146,6 +161,7 @@ configure_project() {
   prompt CACHE_TTL "⏱️   Cache TTL in seconds ${DIM}(higher = fewer S3 requests = cheaper)${NC}" "604800"
 
   select_versioning
+  select_iam_user
 
   echo ""
   print_divider

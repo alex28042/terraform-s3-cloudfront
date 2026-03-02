@@ -1,22 +1,12 @@
-# Copy this file as terraform.tfvars and adjust values
-# cp terraform.tfvars.example terraform.tfvars
-
 project_name = "marketplace-boats"
 environment  = "prod"
 aws_region   = "eu-west-1"
+cache_ttl    = 604800
+price_class  = "PriceClass_100"
 
-# ── Cost optimization (Free Tier friendly) ──
-# Cache TTL: 7 days = fewer S3 GET requests = cheaper
-cache_ttl = 604800
-
-# PriceClass_100 = US + Europe only (cheapest)
-price_class = "PriceClass_100"
-
-# Versioning disabled by default (doubles storage, Free Tier = 5GB)
-# Set to true if you need protection against accidental deletes
 enable_versioning = false
+create_iam_user   = true
 
-# Restrict in production to your actual frontend domain
 cors_allowed_origins = ["*"]
 
 tags = {

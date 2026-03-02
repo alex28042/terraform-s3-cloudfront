@@ -49,4 +49,6 @@ module "iam" {
 
   policy_name   = "${local.name_prefix}-backend-s3"
   s3_bucket_arn = module.s3.bucket_arn
+  create_user   = var.create_iam_user
+  user_name     = "${local.name_prefix}-backend"
 }

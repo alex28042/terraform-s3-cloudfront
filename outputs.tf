@@ -22,3 +22,14 @@ output "backend_policy_arn" {
   description = "IAM policy ARN to attach to your backend role/user."
   value       = module.iam.policy_arn
 }
+
+output "backend_access_key_id" {
+  description = "Access Key ID for Railway/Vercel/Render env vars (only if create_iam_user = true)."
+  value       = module.iam.access_key_id
+}
+
+output "backend_secret_access_key" {
+  description = "Secret Access Key for Railway env vars (only if create_iam_user = true). Run: terraform output -raw backend_secret_access_key"
+  value       = module.iam.secret_access_key
+  sensitive   = true
+}

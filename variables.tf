@@ -49,6 +49,12 @@ variable "cors_allowed_origins" {
   default     = ["*"]
 }
 
+variable "create_iam_user" {
+  description = "Create an IAM user with access keys for external platforms (Railway, Vercel, Render, etc.)."
+  type        = bool
+  default     = false
+}
+
 variable "tags" {
   description = "Additional tags applied to all resources."
   type        = map(string)

@@ -116,6 +116,7 @@ terraform init && terraform apply
 | `cache_ttl` | CloudFront cache TTL in seconds | `604800` (7 days) |
 | `price_class` | CDN coverage: `PriceClass_100`, `PriceClass_200`, `PriceClass_All` | `PriceClass_100` |
 | `enable_versioning` | Enable S3 versioning (doubles storage) | `false` |
+| `create_iam_user` | Create IAM user with Access Keys for Railway/Vercel/Render | `false` |
 | `cors_allowed_origins` | CORS allowed origins | `["*"]` |
 | `tags` | Additional tags for all resources | `{}` |
 
@@ -178,6 +179,69 @@ After deployment, you get:
 | `s3_bucket_name` | Bucket name for backend configuration |
 | `s3_bucket_arn` | Bucket ARN |
 | `backend_policy_arn` | IAM policy ARN to attach to backend role |
+| `backend_access_key_id` | Access Key ID (only if `create_iam_user = true`) |
+| `backend_secret_access_key` | Secret Access Key (only if `create_iam_user = true`) |
+
+## Connect your backend (Railway, Vercel, Render, etc.)
+
+If you set `create_iam_user = true`, Terraform creates an IAM user with Access Keys and shows them after deployment. Add these as **environment variables** in your platform:
+
+| Env Variable | Value |
+|-------------|-------|
+| `AWS_ACCESS_KEY_ID` | From terraform output |
+| `AWS_SECRET_ACCESS_KEY` | From terraform output |
+| `AWS_REGION` | The region you selected (e.g. `eu-west-1`) |
+| `S3_BUCKET_NAME` | From terraform output |
+| `CDN_URL` | From terraform output |
+
+Then use the AWS SDK in your backend to upload/read/delete files:
+
+**Node.js (NestJS, Express, etc.)**
+```typescript
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+
+const s3 = new S3Client({ region: process.env.AWS_REGION });
+
+// Upload
+await s3.send(new PutObjectCommand({
+  Bucket: process.env.S3_BUCKET_NAME,
+  Key: "boats/yacht-001.webp",
+  Body: fileBuffer,
+  ContentType: "image/webp",
+}));
+
+// The image is now available at: ${CDN_URL}/boats/yacht-001.webp
+```
+
+**Python (Django, FastAPI, etc.)**
+```python
+import boto3
+
+s3 = boto3.client("s3", region_name=os.environ["AWS_REGION"])
+
+# Upload
+s3.upload_fileobj(file, os.environ["S3_BUCKET_NAME"], "boats/yacht-001.webp")
+
+# The image is now available at: {CDN_URL}/boats/yacht-001.webp
+```
+
+**Java (Spring Boot)**
+```java
+S3Client s3 = S3Client.builder()
+    .region(Region.of(System.getenv("AWS_REGION")))
+    .build();
+
+s3.putObject(
+    PutObjectRequest.builder()
+        .bucket(System.getenv("S3_BUCKET_NAME"))
+        .key("boats/yacht-001.webp")
+        .contentType("image/webp")
+        .build(),
+    RequestBody.fromBytes(fileBytes)
+);
+```
+
+> **Note:** If you need the secret key again later, run: `terraform output -raw backend_secret_access_key`
 
 ## Usage after deployment
 
