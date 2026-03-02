@@ -14,8 +14,8 @@ You have a web app (e.g. a marketplace) and need:
 ## Quick start
 
 ```bash
-git clone https://github.com/alex28042/deploy-s3-and-cdn.git
-cd deploy-s3-and-cdn
+git clone https://github.com/alex28042/terraform-s3-cloudfront.git
+cd terraform-s3-cloudfront
 chmod +x deploy.sh
 ./deploy.sh
 ```
@@ -31,9 +31,16 @@ The interactive script will guide you through:
 
 | Tool | Required | Install |
 |------|----------|---------|
-| [Terraform](https://terraform.io) >= 1.5 | Yes | `brew install terraform` |
-| [AWS CLI](https://aws.amazon.com/cli/) | Recommended | `brew install awscli` |
+| [Terraform](https://terraform.io) >= 1.10 | Yes | `brew install terraform` |
+| [AWS CLI](https://aws.amazon.com/cli/) v2 | Recommended | `brew install awscli` |
 | AWS account with IAM credentials | Yes | — |
+
+### Versions
+
+| Dependency | Version | Notes |
+|-----------|---------|-------|
+| Terraform | >= 1.10 | Required for `check` blocks and native S3 state locking |
+| AWS Provider | ~> 6.0 | v6 GA (June 2025). v5 is in security-only maintenance |
 
 ## Architecture
 
@@ -60,7 +67,7 @@ The interactive script will guide you through:
 ## Project structure
 
 ```
-deploy-s3-and-cdn/
+terraform-s3-cloudfront/
 ├── deploy.sh                     # Interactive entry point
 ├── scripts/                      # Modular bash scripts (SOLID)
 │   ├── utils.sh                  # Colors, prompts, helpers
@@ -70,10 +77,11 @@ deploy-s3-and-cdn/
 │   ├── show_summary.sh           # Pre-deploy review
 │   ├── run_terraform.sh          # Init, plan, apply
 │   └── destroy.sh                # Teardown with double confirmation
-├── main.tf                       # Root orchestrator (modules)
+├── main.tf                       # Root orchestrator (modules) + check blocks
 ├── locals.tf                     # Computed names
 ├── variables.tf                  # Input variables
 ├── outputs.tf                    # Output values
+├── backend.tf.example            # Remote state with native S3 locking
 ├── terraform.tfvars.example      # Config template
 └── modules/
     ├── s3/                       # Storage module
@@ -105,6 +113,18 @@ cp terraform.tfvars.example terraform.tfvars
 # Edit terraform.tfvars with your values
 terraform init && terraform apply
 ```
+
+### Remote state (recommended for teams)
+
+By default state is stored locally. For shared environments, copy the backend example:
+
+```bash
+cp backend.tf.example backend.tf
+# Edit backend.tf with your state bucket name and region
+terraform init -migrate-state
+```
+
+Uses **native S3 locking** (`use_lockfile = true`) — no DynamoDB table needed. This is the recommended approach since Terraform 1.10+ (DynamoDB-based locking is deprecated).
 
 ### Variables
 

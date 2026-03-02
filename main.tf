@@ -1,10 +1,10 @@
 terraform {
-  required_version = ">= 1.5"
+  required_version = ">= 1.10"
 
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0"
+      version = "~> 6.0"
     }
   }
 }
@@ -51,4 +51,18 @@ module "iam" {
   s3_bucket_arn = module.s3.bucket_arn
   create_user   = var.create_iam_user
   user_name     = "${local.name_prefix}-backend"
+}
+
+check "cdn_is_deployed" {
+  assert {
+    condition     = module.cdn.domain_name != ""
+    error_message = "CloudFront distribution domain is empty"
+  }
+}
+
+check "s3_bucket_exists" {
+  assert {
+    condition     = module.s3.bucket_id != ""
+    error_message = "S3 bucket was not created"
+  }
 }
